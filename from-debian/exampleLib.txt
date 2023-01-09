@@ -1,0 +1,88 @@
+cmake_minimum_required(VERSION 3.16)                                                                                                                                                                       
+                                                                                                                                                                                                           
+project(osmocore C)                                                                                                                                                                                        
+set(Project osmocore)                                                                                                                                                                                      
+                                                                                                                                                                                                           
+set(CMAKE_C_FLAGS "-Wall -mavx2 -msse4.1 -mssse3")                                                                                                                                                         
+                                                                                                                                                                                                           
+add_library(${Project} STATIC)                                                                                                                                                                             
+
+target_include_directories(osmocore PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+                                                                                                                                                                                                           
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)                                                                                                                                                                   
+
+target_include_directories(osmocore PRIVATE                                                                                                                                                                
+    ${CMAKE_CURRENT_SOURCE_DIR}/src                                                                                                                                                                              
+)                                                                                                                                                                                                          
+                                                                                                                                                                                                           
+target_sources(osmocore PRIVATE                                                                                                                                                                            
+${SRC_DIR}/strrb.c                                                                                                                                                                                         
+${SRC_DIR}/gsmtap_util.c                                                                                                                                                                                   
+${SRC_DIR}/gsm/milenage/aes-internal-enc.c                                                                                                                                                                 
+${SRC_DIR}/gsm/milenage/milenage.c 
+${SRC_DIR}/sim/card_fs_uicc.c
+${SRC_DIR}/sim/reader_pcsc.c
+${SRC_DIR}/panic.c
+${SRC_DIR}/macaddr.c
+${SRC_DIR}/plugin.c
+${SRC_DIR}/it_q.c
+${SRC_DIR}/rbtree.c
+${SRC_DIR}/time_cc.c
+${SRC_DIR}/thread.c
+)        
+                                                                                                                                                                                                           
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a)                                                                                                                                                                        
+                                                                                                                                                                                                           
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/") 
+
+find_package(Talloc)
+find_package(Sctp)
+find_package(Usb)
+find_package(Mnl)
+find_package(Pcsc)
+
+set(INC_LIBS
+    "/usr/include/PCSC/"
+)
+
+# НАДО ПОСМОТРЕТЬ ЧТО КОРОЧЕ СМОТРИ ЕСТЬ ПАКЕТ ЛИБОСМОКОРЕ ЗАЛУПА ЕСТЬ А ФАЙЛИК
+
+message(STATUS "Includes: ${INC_LIBS}")
+
+include_directories(${INC_LIBS}) # library requires this ? 
+
+set(ALL_LIBS
+    ${TALLOC_LIBRARIES}
+    ${SCTP_LIBRARIES}
+    ${USB_LIBRARIES}
+    ${MNL_LIBRARIES}
+    ${PCSC_LIBRARIES}
+    -lsystemd
+)
+
+target_link_libraries(${Project} PUBLIC
+    ${ALL_LIBS}
+)
+
+target_compile_definitions(${Project} PUBLIC
+
+)
+
+install(TARGETS ${Project} LIBRARY DESTINATION bin)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/osmocom" # source directory
+        DESTINATION "include" # target directory
+        FILES_MATCHING # install only matched files
+        PATTERN "*.h" # select header files
+        PATTERN "gsm/*"
+        PATTERN "gprs/*"
+        PATTERN "vty/*"
+        PATTERN "codec/*"
+        PATTERN "coding/*"
+        PATTERN "ctrl/*"
+        PATTERN "usb/*"
+        PATTERN "crypt/*"
+        PATTERN "core/*"
+        PATTERN "sim/*"
+)
